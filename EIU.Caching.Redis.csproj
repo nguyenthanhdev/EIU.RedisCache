@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <!-- 👇 Thông tin hiển thị trên NuGet -->
-    <PackageId>EIU.Infrastructure.Redis</PackageId>
-    <Version>1.0.0</Version>
-    <Authors>YourName</Authors>
-    <Company>YourCompany</Company>
+    <PackageId>EIU.Caching.Redis</PackageId>
+    <Version>1.0.1</Version>
+    <Authors>IT EIU</Authors>
+    <Company>EIU</Company>
     <Description>Redis caching library with attribute-based configuration and interception support for ASP.NET Core.</Description>
     <PackageTags>redis cache attribute interceptor aspnetcore</PackageTags>
-    <RepositoryUrl>https://github.com/yourusername/EIU.Infrastructure.Redis</RepositoryUrl>
+    <RepositoryUrl>https://github.com/yourusername/EIU.Caching.Redis</RepositoryUrl>
     <!-- 👇 Thêm license -->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <!-- 👇 Thêm Readme -->

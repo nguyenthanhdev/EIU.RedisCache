@@ -1,4 +1,4 @@
-namespace EIU.Infrastructure.Redis.Core
+namespace EIU.Caching.Redis.Core
 {
     public interface IRedisCacheService
     {

@@ -1,13 +1,14 @@
 using System.Security.Cryptography;
 using System.Text;
-using EIU.Infrastructure.Redis.Core;
+using System.Text.Json;
+using EIU.Caching.Redis.Core;
+using EIU.Caching.Redis.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using System.Text.Json;
 
-namespace EIU.Infrastructure.Redis.Attributes
+namespace EIU.Caching.Redis.Attributes
 {
     /// <summary>
     /// Attribute dùng để cache dữ liệu trả về của Action (ví dụ GET /api/student/list)
@@ -17,9 +18,14 @@ namespace EIU.Infrastructure.Redis.Attributes
     {
         private readonly int _durationSeconds;
 
-        public RedisCacheAttribute(int durationSeconds = 0)
+        public RedisCacheAttribute()
         {
-            _durationSeconds = durationSeconds;
+            _durationSeconds = 0; // dùng default trong config
+        }
+
+        public RedisCacheAttribute(string? durationTimes)
+        {
+            _durationSeconds = DurationHelper.ParseDuration(durationTimes ?? string.Empty);
         }
 
         public async Task OnActionExecutionAsync(

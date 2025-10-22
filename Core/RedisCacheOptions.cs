@@ -1,34 +1,44 @@
-namespace EIU.Infrastructure.Redis.Core
+using System;
+using System.Text.RegularExpressions;
+using EIU.Caching.Redis.Helpers;
+
+public class RedisCacheOptions
 {
     /// <summary>
-    /// Cấu hình cho Redis Cache (thiết lập thông tin chung cho toàn hệ thống)
+    /// Chuỗi kết nối đến Redis Server (vd: "localhost:6379" hoặc "10.0.0.5:6379,password=xxx")
     /// </summary>
-    public class RedisCacheOptions
+    public string ConnectionString { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Alias (bí danh) cho dự án – dùng để phân biệt cache giữa các service khác nhau
+    /// </summary>
+    public string? ProjectAlias { get; set; }
+
+    /// <summary>
+    /// Tự động sinh khóa (key) dựa trên tham số đầu vào của Action hay Service
+    /// </summary>
+    public bool AutoKeyByParameters { get; set; } = true;
+
+    /// <summary>
+    /// Thời gian cache mặc định – có thể ghi dạng:
+    /// "1d" (1 ngày), "6h" (6 giờ), "30m" (30 phút), "45s" (45 giây), hoặc "120" (120 giây)
+    /// </summary>
+    private object? _durationRaw;
+    public object? DefaultDurationRaw
     {
-        /// <summary>
-        /// Chuỗi kết nối đến Redis Server (ví dụ: "localhost:6379" hoặc "10.0.0.5:6379,password=xxx")
-        /// </summary>
-        public string ConnectionString { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Alias (bí danh) cho dự án – dùng để phân biệt cache giữa các service khác nhau
-        /// </summary>
-        public string? ProjectAlias { get; set; }
-
-        /// <summary>
-        /// Tự động sinh khóa (key) dựa trên tham số đầu vào của Action hay Service
-        /// </summary>
-        public bool AutoKeyByParameters { get; set; } = true;
-
-        /// <summary>
-        /// Thời gian cache mặc định (giây)
-        /// </summary>
-        public int DefaultDurationSeconds { get; set; } = 60;
-
-        /// <summary>
-        /// Bật/tắt Redis cache toàn hệ thống.
-        /// Nếu false thì hệ thống bỏ qua toàn bộ cache.
-        /// </summary>
-        public bool Enabled { get; set; } = true;
+        get => _durationRaw;
+        set
+        {
+            _durationRaw = value;
+            DefaultDurationSeconds = DurationHelper.GetDurationSeconds(value);
+        }
     }
+
+    public int DefaultDurationSeconds { get; private set; } = 60;
+
+    /// <summary>
+    /// Bật/tắt Redis cache toàn hệ thống.
+    /// Nếu false thì hệ thống bỏ qua toàn bộ cache.
+    /// </summary>
+    public bool Enabled { get; set; } = true;
 }

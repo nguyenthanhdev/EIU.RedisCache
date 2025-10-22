@@ -1,7 +1,7 @@
 using StackExchange.Redis;
 using System.Text.Json;
 
-namespace EIU.Infrastructure.Redis.Core
+namespace EIU.Caching.Redis.Core
 {
     /// <summary>
     /// Service thao tác trực tiếp với Redis (get/set/remove)

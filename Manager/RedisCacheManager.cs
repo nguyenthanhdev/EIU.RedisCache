@@ -1,6 +1,7 @@
-using EIU.Infrastructure.Redis.Core;
+using EIU.Caching.Redis.Core;
+using EIU.Caching.Redis.Helpers;
 
-namespace EIU.Infrastructure.Redis.Manager
+namespace EIU.Caching.Redis.Manager
 {
     /// <summary>
     /// Quản lý logic cache cấp cao, có thể mở rộng cho nhiều use case phức tạp hơn
@@ -15,17 +16,36 @@ namespace EIU.Infrastructure.Redis.Manager
         }
 
         /// <summary>
-        /// Lấy dữ liệu cache theo key, hoặc chạy func để cache lại nếu chưa có
+        /// Lấy dữ liệu cache theo key, hoặc chạy factory để cache lại nếu chưa có.
+        /// Cho phép truyền TTL dạng TimeSpan hoặc string "1d2h30m".
         /// </summary>
-        public async Task<T?> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiry = null)
+        public async Task<T?> GetOrSetAsync<T>(
+            string key,
+            Func<Task<T>> factory,
+            object? expiry = null
+        )
         {
+            // ✅ 1. Kiểm tra cache có sẵn chưa
             var data = await _cacheService.GetAsync<T>(key);
             if (data != null)
                 return data;
 
+            // ✅ 2. Gọi factory để lấy dữ liệu mới
             var result = await factory();
             if (result != null)
-                await _cacheService.SetAsync(key, result, expiry);
+            {
+                // ✅ 3. Chuyển đổi thời gian hết hạn
+                TimeSpan? ttl = expiry switch
+                {
+                    null => null,
+                    TimeSpan ts => ts,
+                    string s => TimeSpan.FromSeconds(DurationHelper.ParseDuration(s)),
+                    int seconds => TimeSpan.FromSeconds(seconds),
+                    _ => null,
+                };
+
+                await _cacheService.SetAsync(key, result, ttl);
+            }
 
             return result;
         }
