@@ -12,20 +12,23 @@ namespace EIU.Caching.Redis.Attributes
 {
     /// <summary>
     /// Attribute dùng để cache dữ liệu trả về của Action (ví dụ GET /api/student/list)
+    ///
+    /// 🧩 Hỗ trợ:
+    /// - durationTimes: thời gian cache (vd: "1h30m", "2d", ...)
+    /// - keysOrPrefixes: override key hoặc prefix (vd: "Student:GetList", "Student:Detail:{id}")
+    ///
+    /// Nếu cả hai để trống → hệ thống tự sinh key dựa theo Controller + Action + Params.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
     public class RedisCacheAttribute : Attribute, IAsyncActionFilter
     {
         private readonly int _durationSeconds;
+        private readonly string? _keysOrPrefixes;
 
-        public RedisCacheAttribute()
+        public RedisCacheAttribute(string? durationTimes = null, string? keysOrPrefixes = null)
         {
-            _durationSeconds = 0; // dùng default trong config
-        }
-
-        public RedisCacheAttribute(string? durationTimes)
-        {
-            _durationSeconds = DurationHelper.ParseDuration(durationTimes ?? string.Empty);
+            _keysOrPrefixes = keysOrPrefixes;
+            _durationSeconds = DurationHelper.ParseDuration(durationTimes);
         }
 
         public async Task OnActionExecutionAsync(
@@ -40,7 +43,7 @@ namespace EIU.Caching.Redis.Attributes
                 .HttpContext.RequestServices.GetRequiredService<IOptions<RedisCacheOptions>>()
                 .Value;
 
-            // 🔧 Nếu cache bị tắt trong cấu hình, bỏ qua
+            // Nếu cache bị tắt trong cấu hình, bỏ qua
             if (!options.Enabled)
             {
                 await next();
@@ -52,9 +55,19 @@ namespace EIU.Caching.Redis.Attributes
             var action = context.ActionDescriptor.RouteValues["action"];
             var project = options.ProjectAlias ?? "default";
 
-            // Tạo key dựa trên param
-            string paramKey = BuildParameterKey(context.ActionArguments, options);
-            var cacheKey = $"{project}:{controller}:{action}{paramKey}".ToLowerInvariant();
+            // Xác định key cache
+            string cacheKey;
+            if (!string.IsNullOrWhiteSpace(_keysOrPrefixes))
+            {
+                // Nếu người dùng chỉ định key thủ công
+                cacheKey = $"{project}:{_keysOrPrefixes}".ToLowerInvariant();
+            }
+            else
+            {
+                // Tạo key dựa trên param
+                string paramKey = BuildParameterKey(context.ActionArguments, options);
+                cacheKey = $"{project}:{controller}:{action}{paramKey}".ToLowerInvariant();
+            }
 
             // ✅ Kiểm tra có cache chưa
             var cached = await cacheService.GetAsync(cacheKey);
